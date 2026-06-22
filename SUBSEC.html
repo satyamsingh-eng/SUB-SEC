@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SarvaX — 60 Sector Target Map</title>
+<style>
+:root{
+  --black:#000;--surface1:#111;--surface2:#1a1a1a;--surface3:#222;--surface4:#272729;
+  --white:#fff;--near-black:#1d1d1f;--light-gray:#f5f5f7;
+  --text1:rgba(255,255,255,.92);--text2:rgba(255,255,255,.55);--text3:rgba(255,255,255,.3);
+  --text4:rgba(255,255,255,.14);
+  --blue:#0071e3;--blue-b:#2997ff;--blue-link:#0066cc;
+  --t1:#30d158;--t1bg:rgba(48,209,88,.1);--t1bd:rgba(48,209,88,.2);
+  --t2:#2997ff;--t2bg:rgba(41,151,255,.1);--t2bd:rgba(41,151,255,.2);
+  --t3:#ff9f0a;--t3bg:rgba(255,159,10,.1);--t3bd:rgba(255,159,10,.2);
+  --t4:#ff453a;--t4bg:rgba(255,69,58,.1);--t4bd:rgba(255,69,58,.2);
+  --live-c:#30d158;--live-bg:rgba(48,209,88,.08);--live-bd:rgba(48,209,88,.18);
+  --build-c:#ff9f0a;--build-bg:rgba(255,159,10,.08);--build-bd:rgba(255,159,10,.18);
+  --gated-c:#ff453a;--gated-bg:rgba(255,69,58,.08);--gated-bd:rgba(255,69,58,.18);
+  --bd:rgba(255,255,255,.07);--font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --sh:rgba(0,0,0,.22) 3px 5px 30px 0px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;font-size:16px;}
+body{font-family:var(--font);background:var(--black);color:var(--text1);-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden;}
+
+/* ── NAV ── */
+.nav{position:sticky;top:0;z-index:200;background:rgba(0,0,0,.88);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--bd);height:48px;display:flex;align-items:center;}
+.nav-inner{max-width:1280px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;width:100%;}
+.nav-brand{font-size:14px;font-weight:700;letter-spacing:-.3px;color:var(--white);}
+.nav-brand em{font-style:normal;color:var(--blue-b);}
+.nav-right{display:flex;align-items:center;gap:16px;}
+.nav-meta{font-size:11px;color:var(--text3);font-weight:600;letter-spacing:.8px;text-transform:uppercase;}
+.nav-window{font-size:11px;font-weight:700;color:var(--t3);background:var(--t3bg);border:1px solid var(--t3bd);padding:3px 10px;border-radius:980px;}
+
+/* ── HERO ── */
+.hero{padding:80px 24px 60px;text-align:center;background:var(--black);border-bottom:1px solid var(--bd);}
+.hero-eyebrow{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:14px;}
+.hero h1{font-size:clamp(36px,5vw,56px);font-weight:600;line-height:1.07;letter-spacing:-.28px;color:var(--white);margin-bottom:14px;}
+.hero h1 em{font-style:normal;color:var(--blue-b);}
+.hero p{font-size:17px;line-height:1.47;letter-spacing:-.374px;color:var(--text2);max-width:600px;margin:0 auto 36px;}
+.kpi-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+.kpi{background:var(--surface4);border-radius:12px;padding:14px 22px;min-width:110px;box-shadow:var(--sh);}
+.kpi-num{font-size:26px;font-weight:700;color:var(--white);letter-spacing:-.5px;line-height:1.1;display:block;}
+.kpi-lbl{font-size:11px;color:var(--text3);font-weight:600;letter-spacing:.8px;text-transform:uppercase;margin-top:4px;}
+
+/* ── FILTER ── */
+.filter-bar{max-width:1280px;margin:0 auto;padding:28px 24px 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.tier-tabs{display:flex;background:rgba(255,255,255,.05);border-radius:10px;padding:3px;gap:2px;}
+.t-tab{padding:6px 14px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--text2);transition:all .15s;white-space:nowrap;letter-spacing:-.1px;}
+.t-tab:hover{color:var(--white);}
+.t-tab.active{color:var(--white);background:rgba(255,255,255,.1);}
+.t-tab.a1.active{background:var(--t1bg);color:var(--t1);}
+.t-tab.a2.active{background:var(--t2bg);color:var(--t2);}
+.t-tab.a3.active{background:var(--t3bg);color:var(--t3);}
+.t-tab.a4.active{background:var(--t4bg);color:var(--t4);}
+.search-wrap{margin-left:auto;position:relative;}
+.search-input{background:rgba(255,255,255,.06);border:1px solid var(--bd);border-radius:8px;padding:7px 14px 7px 34px;font-size:13px;color:var(--white);font-family:var(--font);width:240px;outline:none;transition:border-color .15s;letter-spacing:-.1px;}
+.search-input::placeholder{color:var(--text3);}
+.search-input:focus{border-color:rgba(255,255,255,.2);}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:13px;pointer-events:none;}
+.results-meta{max-width:1280px;margin:10px auto 0;padding:0 24px;font-size:12px;color:var(--text3);font-weight:500;}
+
+/* ── MAIN LAYOUT ── */
+.main-layout{max-width:1280px;margin:0 auto;padding:20px 24px 80px;display:grid;grid-template-columns:360px 1fr;gap:16px;align-items:start;}
+
+/* ── SECTOR LIST ── */
+.sector-list{position:sticky;top:64px;max-height:calc(100vh - 80px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;}
+.sector-list::-webkit-scrollbar{width:4px;}
+.sector-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px;}
+.tier-group{margin-bottom:6px;}
+.tier-group-header{display:flex;align-items:center;gap:8px;padding:10px 12px 6px;position:sticky;top:0;background:var(--black);z-index:1;}
+.tier-group-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.tier-group-header h3{font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;}
+.tier-group-count{font-size:10px;color:var(--text3);font-weight:600;margin-left:auto;}
+.sector-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;transition:background .12s;border:1px solid transparent;}
+.sector-item:hover{background:rgba(255,255,255,.04);}
+.sector-item.active{background:rgba(255,255,255,.07);border-color:var(--bd);}
+.sector-item.hidden{display:none;}
+.si-num{font-size:10px;color:var(--text3);font-weight:700;width:22px;flex-shrink:0;letter-spacing:.2px;}
+.si-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.si-name{font-size:13px;font-weight:600;color:var(--text1);line-height:1.3;letter-spacing:-.1px;flex:1;min-width:0;}
+.si-aum{font-size:10px;color:var(--text3);white-space:nowrap;flex-shrink:0;}
+
+/* ── DETAIL PANEL ── */
+.detail-panel{position:sticky;top:64px;}
+.detail-empty{background:var(--surface4);border-radius:14px;padding:60px 24px;text-align:center;box-shadow:var(--sh);}
+.detail-empty-icon{font-size:36px;margin-bottom:16px;}
+.detail-empty h3{font-size:19px;font-weight:600;color:var(--white);margin-bottom:8px;letter-spacing:-.2px;}
+.detail-empty p{font-size:14px;color:var(--text2);line-height:1.5;}
+.detail-card{background:var(--surface4);border-radius:14px;overflow:hidden;box-shadow:var(--sh);}
+.detail-top-bar{height:3px;}
+.detail-body{padding:24px;}
+.detail-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap;}
+.detail-title-group{}
+.detail-num{font-size:11px;color:var(--text3);font-weight:600;margin-bottom:4px;letter-spacing:.5px;}
+.detail-name{font-size:24px;font-weight:700;color:var(--white);line-height:1.1;letter-spacing:-.3px;margin-bottom:4px;}
+.detail-category{font-size:13px;color:var(--text2);font-weight:500;letter-spacing:-.1px;}
+.detail-tier-badge{font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;padding:4px 12px;border-radius:6px;flex-shrink:0;}
+.detail-pain{background:rgba(255,255,255,.03);border-left:2px solid rgba(255,255,255,.12);border-radius:0 8px 8px 0;padding:12px 14px;margin-bottom:18px;}
+.detail-pain p{font-size:13px;color:var(--text2);line-height:1.6;letter-spacing:-.1px;}
+.meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px;}
+.meta-block{background:rgba(255,255,255,.04);border-radius:8px;padding:10px 12px;}
+.meta-block-label{font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:4px;}
+.meta-block-value{font-size:12.5px;font-weight:700;color:var(--text1);letter-spacing:-.1px;line-height:1.3;}
+.meta-block-sub{font-size:10.5px;color:var(--text3);margin-top:2px;}
+.compliance-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px;}
+.comp-badge{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:3px 9px;border-radius:5px;}
+.comp-low{background:var(--t1bg);color:var(--t1);}
+.comp-med{background:var(--t3bg);color:var(--t3);}
+.comp-high{background:var(--t4bg);color:var(--t4);}
+.comp-ext{background:rgba(255,69,58,.2);color:#ff453a;font-weight:900;}
+.req-yes{background:var(--t4bg);color:var(--t4);}
+.req-no{background:rgba(255,255,255,.05);color:var(--text3);}
+.sec-title{font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;}
+.agents-list{display:flex;flex-direction:column;gap:6px;margin-bottom:18px;}
+.agent-row{display:flex;align-items:flex-start;gap:9px;background:rgba(255,255,255,.03);border-radius:8px;padding:10px 12px;}
+.agent-icon{font-size:16px;flex-shrink:0;margin-top:1px;width:22px;text-align:center;}
+.agent-text{}
+.agent-name{font-size:12.5px;font-weight:700;color:var(--text1);letter-spacing:-.1px;margin-bottom:2px;}
+.agent-desc{font-size:11px;color:var(--text2);line-height:1.45;}
+.int-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:18px;}
+.int-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;letter-spacing:-.1px;}
+.int-chip::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;}
+.ic-live{background:var(--live-bg);border:1px solid var(--live-bd);color:var(--live-c);}
+.ic-build{background:var(--build-bg);border:1px solid var(--build-bd);color:var(--build-c);}
+.ic-gated{background:var(--gated-bg);border:1px solid var(--gated-bd);color:var(--gated-c);}
+.skill-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px;}
+.skill-chip{font-size:11px;color:var(--text2);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);padding:3px 9px;border-radius:5px;letter-spacing:-.05px;}
+.detail-divider{height:1px;background:var(--bd);margin:16px 0;}
+.int-legend{display:flex;gap:12px;margin-top:8px;}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text3);}
+.leg-dot{width:6px;height:6px;border-radius:50%;}
+
+/* ── TIER 4 SPECIAL ── */
+.t4-overlay{background:rgba(255,69,58,.04);border:1px solid var(--t4bd);border-radius:10px;padding:14px 16px;margin-bottom:16px;}
+.t4-overlay p{font-size:12.5px;color:rgba(255,100,90,.8);line-height:1.6;}
+.t4-overlay strong{color:var(--t4);font-weight:700;}
+
+@media(max-width:960px){
+  .main-layout{grid-template-columns:1fr;gap:12px;}
+  .sector-list{position:relative;top:0;max-height:280px;}
+  .detail-panel{position:relative;top:0;}
+  .meta-grid{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:600px){
+  .hero h1{font-size:32px;}
+  .filter-bar{flex-direction:column;align-items:stretch;}
+  .search-wrap{width:100%;margin-left:0;}
+  .search-input{width:100%;}
+  .tier-tabs{flex-wrap:wrap;}
+  .meta-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-brand">SarvaX<em>.ai</em> — Sector Intelligence</div>
+    <div class="nav-right">
+      <span class="nav-meta">June 2026</span>
+      <span class="nav-window">⚡ 12–18 Month Window</span>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">C3aLabs · Financial Services GTM Map</div>
+  <h1>60 Sectors.<br/>Every Target, <em>Ranked.</em></h1>
+  <p>Every financial services sub-sector mapped to a buyer, a pain point, a priority, and the exact agents SarvaX needs to win. P0 means move now.</p>
+  <div class="kpi-row">
+    <div class="kpi"><span class="kpi-num">20</span><span class="kpi-lbl">T1 Beachhead</span></div>
+    <div class="kpi"><span class="kpi-num">15</span><span class="kpi-lbl">T2 Expansion</span></div>
+    <div class="kpi"><span class="kpi-num">15</span><span class="kpi-lbl">T3 Enterprise</span></div>
+    <div class="kpi"><span class="kpi-num">10</span><span class="kpi-lbl">T4 Avoid Now</span></div>
+    <div class="kpi"><span class="kpi-num">0</span><span class="kpi-lbl">SOC 2 Needed (T1)</span></div>
+  </div>
+</div>
+
+<!-- FILTER -->
+<div class="filter-bar">
+  <div class="tier-tabs">
+    <button class="t-tab active" data-tier="0">All 60</button>
+    <button class="t-tab a1" data-tier="1">T1 Beachhead</button>
+    <button class="t-tab a2" data-tier="2">T2 Expansion</button>
+    <button class="t-tab a3" data-tier="3">T3 Enterprise</button>
+    <button class="t-tab a4" data-tier="4">T4 Avoid</button>
+  </div>
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" id="searchInput" type="text" placeholder="Search sectors…"/>
+  </div>
+</div>
+<div class="results-meta" id="resultsMeta">Showing 60 sectors</div>
+
+<!-- MAIN LAYOUT -->
+<div class="main-layout">
+
+  <!-- SECTOR LIST -->
+  <div class="sector-list" id="sectorList"></div>
+
+  <!-- DETAIL PANEL -->
+  <div class="detail-panel" id="detailPanel">
+    <div class="detail-empty">
+      <div class="detail-empty-icon">🎯</div>
+      <h3>Select a sector</h3>
+      <p>Click any sector on the left to see the full profile — agents, integrations, required skills, and why it's prioritised the way it is.</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const SECTORS = [
+  // ════ TIER 1 — BEACHHEAD (20) ════
+  {id:1,tier:1,name:"Solo Registered Investment Advisor",cat:"Independent RIA",aum:"$0–$50M",dm:"Advisor (self)",cycle:"1–2 weeks",arr:"$600–1,200/yr",comp:"LOW",reg:"SEC Rule 204-2",worm:false,soc2:false,rbac:false,
+  pain:"90-min post-meeting admin solo. No staff. Every CRM note, follow-up email, and task is done manually after every single client call. The advisor IS the operations team.",
+  agents:[{i:"🧠",n:"Meeting Intel Agent",d:"Diarizes, transcribes, and extracts commitments from every client meeting with speaker attribution"},
+  {i:"📋",n:"Action Packet Agent",d:"Generates CRM note draft, follow-up email, and task list — one approval click to execute all three"},
+  {i:"🌅",n:"Aura Morning Brief",d:"Daily proactive card: who's due for follow-up, what's open, upcoming review deadlines"},
+  {i:"📤",n:"Follow-Up Email Agent",d:"Drafts personalized post-meeting email from transcript + CRM context automatically"}],
+  ints:[{n:"Wealthbox CRM",s:"build"},{n:"Redtail CRM",s:"build"},{n:"Zoom",s:"live"},{n:"Google Meet",s:"live"},{n:"Gmail",s:"live"},{n:"Google Calendar",s:"live"}],
+  skills:["Annual review workflow","Action item extraction","CRM note formatting","Follow-up email drafting","Commitment tagging","Meeting summary generation"]},
+
+  {id:2,tier:1,name:"Small RIA Practice",cat:"Independent RIA",aum:"$50M–$250M",dm:"Founding Partner",cycle:"1–3 weeks",arr:"$1,200–2,400/yr",comp:"LOW",reg:"SEC Rule 204-2",worm:false,soc2:false,rbac:false,
+  pain:"2–5 advisors each running their own ad-hoc note workflow. No consistency. Client experience varies by advisor. Onboarding and review prep done differently every time.",
+  agents:[{i:"🧠",n:"Meeting Intel Agent",d:"Consistent meeting capture across all advisors — same format, same quality every time"},
+  {i:"📋",n:"Action Packet Agent",d:"Standardized CRM notes and action packets — uniform output regardless of which advisor ran the meeting"},
+  {i:"🌅",n:"Firm Aura Brief",d:"Firm-wide daily brief: all open loops, upcoming meetings, expiring tasks across all advisors"},
+  {i:"🔄",n:"Onboarding Workflow Agent",d:"Automates new client intake: doc collection, profile setup, first meeting prep packet"}],
+  ints:[{n:"Wealthbox CRM",s:"build"},{n:"Redtail CRM",s:"build"},{n:"Zoom/Teams",s:"live"},{n:"Gmail/Outlook",s:"live"},{n:"DocuSign",s:"live"},{n:"Google Calendar",s:"live"}],
+  skills:["Annual review workflow","Client onboarding workflow","Action item extraction","CRM note standardization","Follow-up email drafting","Team open loop tracking"]},
+
+  {id:3,tier:1,name:"Growing RIA Firm",cat:"Independent RIA",aum:"$250M–$1B",dm:"CEO / Chief Operating Officer",cycle:"2–4 weeks",arr:"$2,400–6,000/yr",comp:"LOW-MED",reg:"SEC Rule 204-2 + internal compliance",worm:false,soc2:false,rbac:true,
+  pain:"6–20 advisors, 500+ clients, zero consistency. Partner reviews require prep decks. Annual review backlog grows every quarter. COO manually chases advisors for follow-through.",
+  agents:[{i:"🧠",n:"Meeting Intel Agent",d:"Firm-wide meeting capture with advisor attribution and structured output"},
+  {i:"📋",n:"Action Packet Agent",d:"Approval-routed follow-through — senior advisor sign-off before CRM writes and emails send"},
+  {i:"🌅",n:"Firm-Wide Aura Brief",d:"Morning summary of all open client loops, overdue actions, and upcoming reviews across the whole firm"},
+  {i:"📊",n:"Firm Analytics Agent",d:"Track advisor follow-through rates, open loop counts, client contact frequency, and review completion"},
+  {i:"🔄",n:"Annual Review Workflow Agent",d:"Automates the full 8-step review: prep → capture → packet → approval → CRM write → email → tasks → tracking"}],
+  ints:[{n:"Wealthbox CRM",s:"build"},{n:"Redtail/Orion",s:"build"},{n:"Zoom/Teams/Meet",s:"live"},{n:"DocuSign",s:"live"},{n:"Schwab OpenView",s:"gated"},{n:"eMoney",s:"build"}],
+  skills:["Annual review workflow","Firm-wide open loop tracking","Advisor performance analytics","CRM note standardization","Client lifecycle management","Escalation routing"]},
+
+  {id:4,tier:1,name:"Fee-Only Financial Planner",cat:"NAPFA Member",aum:"$0–$100M",dm:"Solo planner (self)",cycle:"1–2 weeks",arr:"$600–1,200/yr",comp:"LOW",reg:"SEC/State RIA",worm:false,soc2:false,rbac:false,
+  pain:"Deep planning sessions run 90+ minutes. Notes from eMoney/MoneyGuidePro need to become client deliverables, tasks, and follow-ups — all manual. No admin support.",
+  agents:[{i:"🧠",n:"Planning Session Agent",d:"Captures and structures planning sessions: goals, gaps, priorities, and action commitments"},
+  {i:"📋",n:"Client Deliverable Agent",d:"Drafts plan summary, prioritized action checklist, and next-step document from session transcript"},
+  {i:"🌅",n:"Aura Morning Brief",d:"Daily brief: upcoming plan reviews, milestone deadlines, open client tasks and homework"},
+  {i:"📤",n:"Follow-Up Agent",d:"Post-session email with next steps, documents needed from client, and advisor to-dos"}],
+  ints:[{n:"eMoney",s:"build"},{n:"MoneyGuidePro",s:"build"},{n:"Wealthbox/Redtail",s:"build"},{n:"Zoom/Meet",s:"live"},{n:"Gmail",s:"live"},{n:"Holistiplan",s:"build"}],
+  skills:["Financial plan summary generation","Goal tracking workflow","Action item extraction","Document request drafting","Milestone check-in automation","Tax planning note generation"]},
+
+  {id:5,tier:1,name:"Hourly / Project-Based Planner",cat:"Independent Planner",aum:"N/A (fee-for-service)",dm:"Planner (self)",cycle:"1 week",arr:"$480–960/yr",comp:"LOW",reg:"State RIA or IAR",worm:false,soc2:false,rbac:false,
+  pain:"Billable hours are the entire revenue model. Every minute of post-session admin is unbillable time. Manual note-writing eats 20–30% of productive capacity.",
+  agents:[{i:"🧠",n:"Session Capture Agent",d:"Auto-captures every hour-tracked session and converts to structured, billable-ready notes"},
+  {i:"⏱️",n:"Billing Note Agent",d:"Generates compliant session summaries formatted for billing and engagement documentation"},
+  {i:"📋",n:"Action Item Agent",d:"Extracts client homework and advisor to-dos separately from each session transcript"},
+  {i:"📤",n:"Client Summary Agent",d:"Sends client a clean post-session summary with tasks, decisions made, and next steps"}],
+  ints:[{n:"Zoom/Meet",s:"live"},{n:"Gmail",s:"live"},{n:"Google Calendar",s:"live"},{n:"eMoney/RightCapital",s:"build"},{n:"FreshBooks/QB",s:"live"}],
+  skills:["Billing note generation","Session summary drafting","Client homework tracking","Task extraction","Time-coded note formatting","Engagement documentation"]},
+
+  {id:6,tier:1,name:"RIA Chief Compliance Officer",cat:"Compliance",aum:"Firm-level",dm:"CCO (self) or Managing Partner",cycle:"1–3 weeks",arr:"$1,200–3,600/yr",comp:"MED",reg:"SEC Rule 204-2, ADV filings",worm:false,soc2:true,rbac:true,
+  pain:"CCO must review advisor communications, audit meeting records, and ensure ADV disclosures are in client files — all done manually from disconnected notes and emails today.",
+  agents:[{i:"🔍",n:"Compliance Review Agent",d:"Scans meeting transcripts for regulatory risk: promises, guarantees, unsuitable investment language"},
+  {i:"📑",n:"ADV Disclosure Agent",d:"Tracks which clients have received required disclosures and flags any missing documentation"},
+  {i:"📋",n:"Audit Trail Agent",d:"Maintains searchable, timestamped record of all advisor-client interactions for exam readiness"},
+  {i:"🚨",n:"Risk Flag Agent",d:"Proactively surfaces advisor communications that need CCO review before they create exposure"}],
+  ints:[{n:"Wealthbox/Redtail",s:"build"},{n:"Zoom/Teams",s:"live"},{n:"Gmail/Outlook",s:"live"},{n:"RIA in a Box/COMPLY",s:"build"},{n:"DocuSign",s:"live"}],
+  skills:["Compliance language scanning","ADV tracking workflow","Audit trail generation","Disclosure verification","Risk flag review","Supervisory review automation"]},
+
+  {id:7,tier:1,name:"Tax-Focused RIA (CPA/RIA Hybrid)",cat:"Tax-Advisory RIA",aum:"$25M–$250M",dm:"CPA/Advisor (self)",cycle:"1–2 weeks",arr:"$600–1,800/yr",comp:"LOW-MED",reg:"SEC/State RIA + IRS standards",worm:false,soc2:false,rbac:false,
+  pain:"Tax planning discussions span Holistiplan, eMoney, and meeting notes simultaneously. Converting tax session insights into prioritized recommendations and client summaries is entirely manual.",
+  agents:[{i:"🧾",n:"Tax Planning Agent",d:"Extracts tax strategy discussions: Roth conversions, tax loss harvesting, RMDs, IRMAA"},
+  {i:"📋",n:"Tax Recommendation Agent",d:"Structures tax opportunities into prioritized action items for advisor review and approval"},
+  {i:"📤",n:"Client Tax Summary Agent",d:"Drafts client-facing tax plan summary with estimated savings and implementation timeline"},
+  {i:"🌅",n:"Tax Season Brief Agent",d:"Daily brief during tax season: deadlines, client status, open Roth conversion windows"}],
+  ints:[{n:"Holistiplan",s:"build"},{n:"eMoney",s:"build"},{n:"Wealthbox/Redtail",s:"build"},{n:"Zoom/Meet",s:"live"},{n:"Google Drive",s:"live"}],
+  skills:["Tax strategy extraction","Roth conversion tracking","RMD workflow","Tax loss harvesting notes","IRMAA planning notes","Client tax summary drafting"]},
+
+  {id:8,tier:1,name:"Retirement Planning Specialist",cat:"Retirement Advisor",aum:"$25M–$200M",dm:"Advisor (self)",cycle:"1–2 weeks",arr:"$600–1,200/yr",comp:"LOW",reg:"SEC/State RIA, DOL Fiduciary Rule",worm:false,soc2:false,rbac:false,
+  pain:"Retirement projections and distribution planning require deep prep before every meeting. Plan updates from each session need documenting and syncing to planning software — all manual.",
+  agents:[{i:"🎯",n:"Retirement Prep Agent",d:"Pulls Monte Carlo outputs, RMD schedules, Social Security projections 24 hours before every meeting"},
+  {i:"🧠",n:"Meeting Intel Agent",d:"Captures retirement plan adjustments, risk tolerance updates, and distribution strategy changes"},
+  {i:"📋",n:"Plan Update Agent",d:"Generates structured plan update notes formatted for MoneyGuidePro/eMoney sync"},
+  {i:"📤",n:"Client Retirement Brief",d:"Post-meeting summary: updated projections, next steps, documents the client needs to bring"}],
+  ints:[{n:"eMoney/MoneyGuidePro",s:"build"},{n:"Wealthbox/Redtail",s:"build"},{n:"Zoom/Meet",s:"live"},{n:"Gmail",s:"live"},{n:"SS Estimator APIs",s:"build"}],
+  skills:["RMD calculation workflow","SS optimization notes","Monte Carlo summary generation","Distribution planning documentation","Beneficiary review tracking","DOL fiduciary documentation"]},
+
+  {id:9,tier:1,name:"Estate Planning–Adjacent RIA",cat:"Estate & Wealth Transfer",aum:"$50M–$500M",dm:"Advisor or Estate Atty partner",cycle:"2–3 weeks",arr:"$1,200–2,400/yr",comp:"MED",reg:"SEC Rule 204-2, state fiduciary",worm:false,soc2:false,rbac:false,
+  pain:"Estate meetings involve complex multi-party discussions — advisor, attorney, client, spouse. Translating these into structured action items and coordinating between parties is entirely manual.",
+  agents:[{i:"🧠",n:"Estate Meeting Capture Agent",d:"Diarizes multi-party estate planning discussions with precise speaker attribution for each party"},
+  {i:"📄",n:"Estate Summary Agent",d:"Generates structured estate planning summary: trust updates, beneficiaries, gifting strategy"},
+  {i:"🔗",n:"Attorney Coordination Agent",d:"Drafts coordination emails to estate attorneys with relevant meeting outputs and action items"},
+  {i:"📋",n:"Document Tracker Agent",d:"Tracks pending estate documents: trust amendments, POA updates, beneficiary change forms"}],
+  ints:[{n:"Wealthbox CRM",s:"build"},{n:"DocuSign",s:"live"},{n:"Zoom/Teams",s:"live"},{n:"Google Drive/SharePoint",s:"live"},{n:"eMoney",s:"build"}],
+  skills:["Estate summary generation","Multi-party meeting capture","Document status tracking","Beneficiary review workflow","Trust amendment tracking","Cross-party coordination emails"]},
+
+  {id:10,tier:1,name:"Divorce Financial Analyst (CDFA)",cat:"Specialist Advisor",aum:"N/A (project-based)",dm:"CDFA (self)",cycle:"1 week",arr:"$480–960/yr",comp:"LOW",reg:"State licensing, CDFA standards",worm:false,soc2:false,rbac:false,
+  pain:"Divorce financial analysis involves sensitive, high-stakes meetings with emotionally charged clients. Accurate documentation of asset discussions, QDRO details, and settlement scenarios is critical.",
+  agents:[{i:"🧠",n:"Case Meeting Agent",d:"Captures financial analysis sessions with full attribution and structured, legally defensible notes"},
+  {i:"📊",n:"Asset Division Agent",d:"Structures asset division discussions: QDRO calculations, property splits, account divisions"},
+  {i:"📋",n:"Case Action Agent",d:"Generates next steps: documents needed, attorney deliverables, client tasks per session"},
+  {i:"📤",n:"Client Brief Agent",d:"Post-meeting summary in plain language: what was decided, what each party needs to do next"}],
+  ints:[{n:"Zoom/Meet",s:"live"},{n:"Gmail",s:"live"},{n:"Google Drive",s:"live"},{n:"DocuSign",s:"live"}],
+  skills:["Case note formatting","QDRO documentation workflow","Asset split tracking","Action item extraction","Attorney coordination drafts","Settlement scenario documentation"]},
+
+  {id:11,tier:1,name:"ESG / Impact-Focused RIA",cat:"Impact Advisory",aum:"$25M–$300M",dm:"Founding Advisor (self)",cycle:"1–2 weeks",arr:"$600–1,800/yr",comp:"LOW",reg:"SEC Rule 204-2",worm:false,soc2:false,rbac:false,
+  pain:"ESG mandates vary widely by client. Documenting impact preferences, screening criteria, and portfolio rationale takes significant time — especially for values-based clients needing detailed justification.",
+  agents:[{i:"🌱",n:"Impact Preference Agent",d:"Captures and structures client impact mandates, exclusions, and priority themes accurately"},
+  {i:"📋",n:"ESG Rationale Agent",d:"Documents investment decision rationale aligned with each client's specific values framework"},
+  {i:"📤",n:"Impact Report Agent",d:"Drafts client-facing impact summary for annual review: what's in the portfolio and why"},
+  {i:"🌅",n:"Aura Morning Brief",d:"Daily brief: upcoming impact reviews, client mandate updates, ESG threshold alerts"}],
+  ints:[{n:"Wealthbox/Redtail",s:"build"},{n:"Zoom/Meet",s:"live"},{n:"Gmail",s:"live"},{n:"Orion/Tamarac",s:"build"}],
+  skills:["Impact mandate documentation","ESG rationale generation","Values-aligned investment notes","Client impact brief drafting","Exclusion list tracking","Annual impact report generation"]},
+
+  {id:12,tier:1,name:"College Funding Advisor",cat:"Education Planning",aum:"$10M–$100M",dm:"Advisor (self)",cycle:"1 week",arr:"$480–960/yr",comp:"LOW",reg:"SEC/State RIA",worm:false,soc2:false,rbac:false,
+  pain:"529 planning discussions require year-by-year projections, contribution tracking, and FAFSA-awareness updates. All client updates after every meeting are done manually.",
+  agents:[{i:"🎓",n:"Education Planning Agent",d:"Captures 529 strategy, contribution targets, school shortlists, and FAFSA planning discussions"},
+  {i:"📋",n:"Funding Plan Agent",d:"Generates structured funding plan update with contribution schedule and projected balance"},
+  {i:"📤",n:"Client Update Agent",d:"Post-meeting email with updated projections, contribution reminders, and next steps"}],
+  ints:[{n:"Wealthbox/Redtail",s:"build"},{n:"Zoom/Meet",s:"live"},{n:"Gmail",s:"live"},{n:"eMoney/MoneyGuidePro",s:"build"}],
+  skills:["529 contribution tracking","FAFSA planning notes","Education funding projection notes","Annual review workflow","Client email drafting","Scholarship deadline tracking"]},
+
+  {id:13,tier:1,name:"Insurance-Licensed RIA (IAR)",cat:"Insurance Advisory",aum:"$25M–$200M",dm:"Advisor (self)",cycle:"1–2 weeks",arr:"$600–1,200/yr",comp:"LOW",reg:"SEC/State RIA + state insurance",worm:false,soc2:false,rbac:false,
+  pain:"Insurance reviews are as paper-heavy as investment reviews. Policy summaries, needs analysis, and product comparisons are done manually for every client meeting.",
+  agents:[{i:"🛡️",n:"Insurance Review Agent",d:"Captures insurance review discussions: coverage gaps, policy updates, beneficiary changes"},
+  {i:"📋",n:"Policy Summary Agent",d:"Generates structured policy summary and recommendation rationale for each reviewed policy"},
+  {i:"📤",n:"Needs Analysis Agent",d:"Drafts client-facing insurance needs analysis from meeting notes and current coverage data"}],
+  ints:[{n:"Wealthbox/Redtail",s:"build"},{n:"Zoom/Meet",s:"live"},{n:"Gmail",s:"live"},{n:"Applied Epic/Hawksoft",s:"build"}],
+  skills:["Insurance review workflow","Policy summary generation","Coverage gap documentation","Needs analysis drafting","Beneficiary review tracking","Renewal reminder automation"]},
+
+  {id:14,tier:1,name:"Military / Veteran Financial Planner",cat:"Specialist Advisor",aum:"$10M–$100M",dm:"Advisor (self)",cycle:"1 week",arr:"$480–960/yr",comp:"LOW",reg:"SEC/State RIA, DoD/VA awareness",worm:false,soc2:false,rbac:false,
+  pain:"Military clients have unique benefit structures (TSP, BRS, SBP, VA disability) requiring specialized knowledge. Every planning conversation has high documentation stakes and tight deadlines.",
+  agents:[{i:"🎖️",n:"Military Benefits Agent",d:"Captures and structures TSP, BRS, SBP, VA disability benefit discussions with precision"},
+  {i:"📋",n:"Action Packet Agent",d:"Generates military-specific action items: enrollment deadlines, election changes, TSP allocation updates"},
+  {i:"📤",n:"Client Brief Agent",d:"Post-meeting summary formatted for military clients: clear, direct, action-oriented with specific deadlines"}],
+  ints:[{n:"Wealthbox/Redtail",s:"build"},{n:"Zoom/Meet",s:"live"},{n:"Gmail",s:"live"}],
+  skills:["Military benefits documentation","TSP strategy notes","BRS transition tracking","VA disability documentation","Deployment planning workflow","SBP election tracking"]},
+
+  {id:15,tier:1,name:"RIA Operations Manager",cat:"Firm Operations",aum:"Firm-level",dm:"COO / Office Manager",cycle:"2–3 weeks",arr:"$1,200–2,400/yr",comp:"LOW",reg:"Internal compliance",worm:false,soc2:false,rbac:true,
+  pain:"Operations manager chases 5–15 advisors for follow-through daily. No visibility into what's open, overdue, or which clients haven't heard back this week.",
+  agents:[{i:"📊",n:"Firm Ops Dashboard Agent",d:"Real-time visibility: all open loops, overdue actions, and advisor completion rates in one view"},
+  {i:"🔁",n:"Follow-Through Tracker",d:"Tracks every post-meeting action item across all advisors, surfaces overdue items for escalation"},
+  {i:"🌅",n:"Ops Morning Brief",d:"Daily ops summary: what needs urgent attention, escalations, and scheduling gaps to fill"},
+  {i:"📋",n:"Process Standardization Agent",d:"Ensures all advisors use consistent note format, CRM structure, and email templates"}],
+  ints:[{n:"Wealthbox/Redtail",s:"build"},{n:"Zoom/Teams",s:"live"},{n:"Gmail/Outlook",s:"live"},{n:"Calendly/Acuity",s:"live"}],
+  skills:["Firm-wide open loop tracking","Advisor follow-through analytics","Process standardization","Escalation routing","Scheduling automation","Operations reporting"]},
+
+  {id:16,tier:1,name:"Freelancer & Gig Economy Advisor",cat:"Specialist Advisor",aum:"$5M–$50M",dm:"Advisor (self)",cycle:"1 week",arr:"$480–600/yr",comp:"LOW",reg:"State RIA",worm:false,soc2:false,rbac:false,
+  pain:"Gig economy clients have irregular income, self-employment taxes, and complex quarterly obligations. Every meeting generates unique action items that fall through the cracks without a system.",
+  agents:[{i:"💼",n:"Gig Income Planning Agent",d:"Captures irregular income discussions: quarterly estimated taxes, SEP-IRA contributions, cash flow"},
+  {i:"📋",n:"Quarterly Checklist Agent",d:"Generates actionable quarterly planning checklist from each planning session"},
+  {i:"📤",n:"Client Brief Agent",d:"Clear post-meeting summary: what to do this quarter, upcoming tax deadlines, amounts to set aside"}],
+  ints:[{n:"Wealthbox/Redtail",s:"build"},{n:"Zoom/Meet",s:"live"},{n:"Gmail",s:"live"},{n:"QuickBooks/Wave",s:"live"}],
+  skills:["Self-employment tax planning notes","Quarterly planning workflow","Cash flow documentation","SEP-IRA contribution tracking","Income irregularity modeling notes"]},
+
+  {id:17,tier:1,name:"Social Security Optimization Specialist",cat:"Retirement Specialist",aum:"N/A (fee-for-service)",dm:"Specialist (self)",cycle:"1 week",arr:"$480–960/yr",comp:"LOW",reg:"State RIA",worm:false,soc2:false,rbac:false,
+  pain:"SS optimization involves complex scenarios (file-and-suspend, spousal, survivor) that must be documented precisely. Analysis outputs from SS software never flow automatically into client notes.",
+  agents:[{i:"🏛️",n:"SS Strategy Agent",d:"Captures SS strategy discussions and structures filing scenarios with all key dates and breakeven calculations"},
+  {i:"📋",n:"Filing Plan Agent",d:"Generates structured SS filing plan with decision rationale, key deadlines, and expected monthly amounts"},
+  {i:"📤",n:"Client SS Brief",d:"Client-friendly summary: when to file, estimated monthly benefit, what to do before the filing date"}],
+  ints:[{n:"Zoom/Meet",s:"live"},{n:"Gmail",s:"live"},{n:"eMoney/MaximizeMySS",s:"build"}],
+  skills:["SS filing scenario documentation","Spousal benefit tracking","Survivor benefit notes","Filing deadline reminders","Strategy rationale generation","Medicare coordination notes"]},
+
+  {id:18,tier:1,name:"Robo-Hybrid Advisory Firm",cat:"Digital RIA",aum:"$25M–$300M",dm:"Founding Advisor / CTO",cycle:"2–3 weeks",arr:"$1,200–3,600/yr",comp:"LOW-MED",reg:"SEC/State RIA",worm:false,soc2:false,rbac:true,
+  pain:"Human touch sessions happen infrequently but are disproportionately important. When clients do reach an advisor, the conversation must be maximally productive and perfectly documented.",
+  agents:[{i:"🤖",n:"Human Session Agent",d:"Maximizes value of infrequent human sessions: deep prep, precise capture, structured approval output"},
+  {i:"📋",n:"Action Escalation Agent",d:"Routes complex client situations from automated to human advisor workflows with full context"},
+  {i:"🌅",n:"Proactive Alert Agent",d:"Surfaces life event signals from client data that warrant human advisor outreach before the client asks"}],
+  ints:[{n:"Salesforce CRM",s:"live"},{n:"Zoom/Meet",s:"live"},{n:"Gmail/Outlook",s:"live"},{n:"Orion/Black Diamond",s:"build"}],
+  skills:["Life event detection","Escalation routing","Session efficiency optimization","Human-in-loop trigger logic","Client alert generation","PLG-to-advisor conversion workflow"]},
+
+  {id:19,tier:1,name:"Behavioral Finance–Led RIA",cat:"Specialist Advisory",aum:"$25M–$200M",dm:"Founding Advisor",cycle:"1–2 weeks",arr:"$600–1,200/yr",comp:"LOW",reg:"SEC/State RIA",worm:false,soc2:false,rbac:false,
+  pain:"Behavioral coaching conversations are nuanced. Capturing client psychology, biases, and emotional triggers — and using them to inform future planning conversations — is entirely manual today.",
+  agents:[{i:"🧠",n:"Behavioral Capture Agent",d:"Identifies and tags client behavioral signals: anchoring, loss aversion, recency bias — from meeting transcripts"},
+  {i:"📋",n:"Behavioral Profile Agent",d:"Builds client behavioral profile over time from meeting history — updated after every session"},
+  {i:"📤",n:"Coaching Brief Agent",d:"Pre-meeting brief with client's known behavioral patterns and recommended coaching approach"}],
+  ints:[{n:"Wealthbox/Redtail",s:"build"},{n:"Zoom/Meet",s:"live"},{n:"Gmail",s:"live"}],
+  skills:["Behavioral signal tagging","Client psychology profiling","Coaching brief generation","Meeting sentiment tracking","Bias documentation","Behavioral pattern analysis"]},
+
+  {id:20,tier:1,name:"Small Business Owner Advisor",cat:"Business-Focused RIA",aum:"$25M–$250M",dm:"Advisor (self)",cycle:"1–2 weeks",arr:"$600–1,800/yr",comp:"LOW-MED",reg:"SEC/State RIA, ERISA adjacent",worm:false,soc2:false,rbac:false,
+  pain:"SBO clients blur personal and business finances. Meetings cover succession, key-man insurance, buy-sell agreements, and personal planning simultaneously — generating complex cross-domain action items.",
+  agents:[{i:"🏢",n:"Business Planning Agent",d:"Captures business and personal planning discussions with clear domain separation"},
+  {i:"📋",n:"Dual-Domain Action Agent",d:"Generates separate personal and business action packets from the same meeting transcript"},
+  {i:"📤",n:"Client Summary Agent",d:"Post-meeting email with personal tasks and business tasks clearly separated for easy action"}],
+  ints:[{n:"Wealthbox/Redtail",s:"build"},{n:"Zoom/Meet",s:"live"},{n:"Gmail",s:"live"},{n:"QuickBooks",s:"live"},{n:"DocuSign",s:"live"}],
+  skills:["Business succession notes","Key-man insurance tracking","Buy-sell agreement documentation","Dual-domain action extraction","Business owner financial planning workflow"]},
+
+  // ════ TIER 2 — EXPANSION (15) ════
+  {id:21,tier:2,name:"Independent Broker-Dealer (IBD)",cat:"Broker-Dealer",aum:"$5B–$100B network",dm:"Head of Advisor Technology / CTO",cycle:"4–12 weeks",arr:"$50K–200K/yr",comp:"HIGH",reg:"FINRA, SEC, WORM required, Reg BI",worm:true,soc2:true,rbac:true,
+  pain:"Thousands of registered reps with inconsistent note-taking. Compliance surveillance is manual and reactive. FINRA audits require searchable, structured communication records across thousands of reps.",
+  agents:[{i:"🧠",n:"Network Meeting Agent",d:"Firm-wide meeting capture with rep attribution and structured output across all 500–5000 reps"},
+  {i:"🔍",n:"Compliance Surveillance Agent",d:"Automated scanning of all rep communications for Reg BI and suitability violations"},
+  {i:"📊",n:"BD Analytics Agent",d:"Network-wide follow-through rates, rep performance scores, and open loop count dashboards"},
+  {i:"📋",n:"Supervisory Review Agent",d:"Routes flagged communications to branch managers for documented review and sign-off"},
+  {i:"🔐",n:"WORM Archive Agent",d:"Routes all meeting outputs to FINRA-compliant WORM storage (Global Relay or Smarsh)"}],
+  ints:[{n:"Salesforce FSC",s:"build"},{n:"Global Relay/Smarsh",s:"gated"},{n:"Zoom/Teams",s:"live"},{n:"FINRA WORM systems",s:"gated"},{n:"Pershing/BNY",s:"gated"}],
+  skills:["FINRA compliance scanning","WORM-compliant note routing","Supervisory review workflow","Branch manager escalation","Rep performance analytics","Reg BI documentation","Suitability documentation"]},
+
+  {id:22,tier:2,name:"Multi-Family Office (MFO)",cat:"Family Office",aum:"$500M–$10B",dm:"CEO / Managing Director",cycle:"4–8 weeks",arr:"$24K–60K/yr",comp:"MED-HIGH",reg:"SEC RIA, family governance",worm:false,soc2:true,rbac:true,
+  pain:"Each family is different. MFO serves multiple ultra-HNW families with distinct governance structures, investment policies, and communication protocols — all managed manually.",
+  agents:[{i:"👨‍👩‍👧‍👦",n:"Family Meeting Agent",d:"Multi-party family meeting capture with family member attribution and governance context"},
+  {i:"📋",n:"Family Action Agent",d:"Family-specific action packets: separate outputs for each principal, trustee, and beneficiary"},
+  {i:"📑",n:"IPS Agent",d:"Tracks Investment Policy Statement adherence and flags deviations for Investment Committee review"},
+  {i:"🌅",n:"Family Brief Agent",d:"Weekly family brief: asset updates, open governance items, upcoming meetings and decisions"},
+  {i:"🔐",n:"Document Vault Agent",d:"Routes meeting outputs to family-specific secure document stores with role-based access"}],
+  ints:[{n:"Salesforce FSC/Addepar",s:"build"},{n:"Zoom/Teams",s:"live"},{n:"Outlook",s:"live"},{n:"Addepar portfolio",s:"build"},{n:"DocuSign",s:"live"},{n:"SharePoint",s:"live"}],
+  skills:["Multi-family meeting capture","IPS adherence tracking","Family governance documentation","Principal brief generation","Cross-family analytics","Document routing workflow"]},
+
+  {id:23,tier:2,name:"Single-Family Office (SFO)",cat:"Family Office",aum:"$100M–$1B",dm:"Family Principal / CIO",cycle:"3–6 weeks",arr:"$12K–36K/yr",comp:"MED",reg:"SEC Family Office exemption or RIA",worm:false,soc2:true,rbac:true,
+  pain:"SFO serves one family across investments, philanthropy, tax, legal, and lifestyle. Meeting outputs span multiple domains and multiple advisors — no coordination layer exists today.",
+  agents:[{i:"🏰",n:"Principal Meeting Agent",d:"Captures meetings with principal family members across all life and financial domains"},
+  {i:"📋",n:"Domain Action Agent",d:"Separates action items by domain: investments, tax, legal, philanthropy, lifestyle — clean routing"},
+  {i:"🌅",n:"Family Office Brief",d:"Daily principal brief: all open items across every domain, upcoming meetings, key deadlines"},
+  {i:"📊",n:"Advisor Coordination Agent",d:"Coordinates outputs between SFO investment, tax, legal, and lifestyle advisors automatically"}],
+  ints:[{n:"Salesforce/Addepar",s:"build"},{n:"Zoom/Teams",s:"live"},{n:"Outlook",s:"live"},{n:"Addepar portfolio",s:"build"},{n:"DocuSign",s:"live"}],
+  skills:["Multi-domain action extraction","Principal brief generation","Philanthropic giving tracking","Legal coordination drafts","Investment policy monitoring","Family governance workflow"]},
+
+  {id:24,tier:2,name:"Schwab-Affiliated RIA",cat:"Custodian-Affiliated RIA",aum:"$100M–$2B",dm:"Founder / CEO",cycle:"3–6 weeks",arr:"$6K–24K/yr",comp:"MED",reg:"SEC RIA + Schwab compliance requirements",worm:false,soc2:true,rbac:true,
+  pain:"Schwab RIAs need seamless integration with Advisor Center and OpenView Gateway. Manual CRM entry after Schwab-custodied account meetings is a major time sink for every advisor.",
+  agents:[{i:"🧠",n:"Meeting Intel Agent",d:"Capture and structure client meetings with Schwab account context pre-loaded"},
+  {i:"📋",n:"Schwab CRM Write Agent",d:"Approval-gated write to CRM with Schwab household mapping and account linkage"},
+  {i:"🌅",n:"Morning Brief Agent",d:"Daily brief including Schwab account alerts, capital gains flags, and pending advisor actions"},
+  {i:"🔍",n:"Compliance Check Agent",d:"Pre-meeting compliance review against Schwab Affinity requirements"}],
+  ints:[{n:"Schwab OpenView Gateway",s:"gated"},{n:"Salesforce FSC/Wealthbox",s:"build"},{n:"Zoom/Teams/Meet",s:"live"},{n:"Gmail/Outlook",s:"live"},{n:"Orion/Black Diamond",s:"build"}],
+  skills:["Schwab account-linked note generation","Schwab compliance workflow","Household CRM mapping","Annual review workflow","OpenView Gateway data sync","Schwab Affinity case study generation"]},
+
+  {id:25,tier:2,name:"Fidelity Institutional–Affiliated RIA",cat:"Custodian-Affiliated RIA",aum:"$100M–$2B",dm:"Founder / Managing Partner",cycle:"3–6 weeks",arr:"$6K–24K/yr",comp:"MED",reg:"SEC RIA + Fidelity Integration Xchange",worm:false,soc2:true,rbac:true,
+  pain:"Fidelity Wealthscape is the custodian hub but has no post-meeting execution layer. Advisors manually reconcile Wealthscape data with their CRM after every single client interaction.",
+  agents:[{i:"🧠",n:"Meeting Intel Agent",d:"Client meeting capture with Fidelity account context and household data pre-integrated"},
+  {i:"📋",n:"Fidelity CRM Write Agent",d:"Approval-gated note and task write to CRM synced with Fidelity Wealthscape household data"},
+  {i:"🌅",n:"Morning Brief Agent",d:"Daily brief including Fidelity account events, pending advisor actions, and upcoming reviews"}],
+  ints:[{n:"Fidelity Integration Xchange",s:"gated"},{n:"Wealthbox/Redtail/Salesforce",s:"build"},{n:"Zoom/Teams/Meet",s:"live"},{n:"Gmail/Outlook",s:"live"},{n:"eMoney",s:"build"}],
+  skills:["Fidelity account-linked note generation","Wealthscape data reconciliation","Annual review workflow","CRM sync automation","Client brief generation","Fidelity compliance documentation"]},
+
+  {id:26,tier:2,name:"Pershing / BNY-Affiliated RIA",cat:"Custodian-Affiliated RIA",aum:"$100M–$2B",dm:"Founder / COO",cycle:"3–6 weeks",arr:"$6K–24K/yr",comp:"MED-HIGH",reg:"SEC RIA + Pershing requirements",worm:false,soc2:true,rbac:true,
+  pain:"Pershing-custodied RIAs serve institutional clients with complex household structures. Meeting notes need to map accurately to multi-account families and corporate entities.",
+  agents:[{i:"🧠",n:"Meeting Intel Agent",d:"Meeting capture with multi-account household context from Pershing NetX360"},
+  {i:"📋",n:"Household Action Agent",d:"Action items mapped to correct household accounts and principals automatically"},
+  {i:"📊",n:"Account Hierarchy Agent",d:"Tracks complex account relationships: trusts, LLCs, joint accounts — accurate CRM output"}],
+  ints:[{n:"Pershing NetX360",s:"gated"},{n:"Salesforce FSC/Redtail",s:"build"},{n:"Zoom/Teams",s:"live"},{n:"Outlook",s:"live"}],
+  skills:["Household account mapping","Multi-principal meeting capture","Institutional note formatting","Pershing data reconciliation","Complex account hierarchy tracking"]},
+
+  {id:27,tier:2,name:"Wirehouse Breakaway Team",cat:"RIA Transition",aum:"$200M–$2B",dm:"Founding Partner(s)",cycle:"2–4 weeks",arr:"$6K–18K/yr",comp:"MED",reg:"SEC RIA (transition)",worm:false,soc2:true,rbac:true,
+  pain:"Breakaway teams move from wirehouse infrastructure (Merrill, Morgan Stanley) to independence. They need to rebuild their ops stack fast. Meeting intelligence is the first gap they feel acutely.",
+  agents:[{i:"🚀",n:"Transition Setup Agent",d:"Rapid onboarding: client meeting templates, CRM structure, workflow setup in 48 hours"},
+  {i:"🧠",n:"Meeting Intel Agent",d:"Production-grade meeting capture from day one of independence — no ramp needed"},
+  {i:"📋",n:"Action Packet Agent",d:"Replaces wirehouse back-office support from day one with structured automated follow-through"},
+  {i:"🌅",n:"Morning Brief Agent",d:"Daily brief filling the support void left by wirehouse infrastructure immediately"}],
+  ints:[{n:"Salesforce FSC/Wealthbox",s:"build"},{n:"Schwab/Fidelity (new custodian)",s:"gated"},{n:"Zoom/Teams",s:"live"},{n:"Outlook/Gmail",s:"live"},{n:"DocuSign (transfers)",s:"live"}],
+  skills:["Rapid onboarding workflow","Client migration documentation","Account transfer tracking","New CRM setup automation","Independence transition playbook","First-90-days advisor workflow"]},
+
+  {id:28,tier:2,name:"Private Client Group (Bank-Affiliated)",cat:"Bank Wealth",aum:"$250M–$5B",dm:"Head of Private Banking / MD",cycle:"6–12 weeks",arr:"$24K–60K/yr",comp:"HIGH",reg:"OCC, FINRA, state banking regs",worm:true,soc2:true,rbac:true,
+  pain:"Private client teams manage ultra-HNW clients across banking, lending, investments, and trust simultaneously. Meeting notes require cross-department coordination and compliance archiving.",
+  agents:[{i:"🏦",n:"Private Client Meeting Agent",d:"Captures cross-product private client meetings with precise domain and department attribution"},
+  {i:"📋",n:"Cross-Department Action Agent",d:"Routes post-meeting actions to correct departments: banking, investments, trust, planning"},
+  {i:"🔐",n:"Compliance Archive Agent",d:"Routes all communication to WORM-compliant archiving with OCC audit trail"},
+  {i:"📊",n:"Relationship Analytics Agent",d:"Tracks relationship depth, product penetration, engagement frequency, and wallet share"}],
+  ints:[{n:"Salesforce FSC (bank)",s:"build"},{n:"Global Relay/Smarsh",s:"gated"},{n:"Teams/Zoom",s:"live"},{n:"Outlook",s:"live"},{n:"Addepar/SEI",s:"gated"}],
+  skills:["Cross-department action routing","Private client meeting capture","Compliance archiving workflow","Relationship analytics","Product penetration tracking","Ultra-HNW client brief generation"]},
+
+  {id:29,tier:2,name:"Credit Union Wealth Management",cat:"Credit Union",aum:"$50M–$500M",dm:"VP Wealth Management",cycle:"4–8 weeks",arr:"$6K–18K/yr",comp:"MED",reg:"NCUA, FINRA (if BD-affiliated)",worm:false,soc2:true,rbac:true,
+  pain:"Credit union wealth teams are small and resource-constrained. Post-meeting admin takes up the majority of advisor time that should be spent on member acquisition and retention.",
+  agents:[{i:"🧠",n:"Member Meeting Agent",d:"Captures credit union member financial planning meetings with structured member-centric output"},
+  {i:"📋",n:"Member Action Agent",d:"Generates follow-up tasks and CRM notes formatted for credit union member relationship systems"},
+  {i:"🌅",n:"Morning Brief Agent",d:"Daily open loop summary for the small wealth management team with escalation flags"}],
+  ints:[{n:"CU CRM (Symitar/Salesforce)",s:"build"},{n:"Zoom/Teams",s:"live"},{n:"Outlook",s:"live"},{n:"Redtail/Wealthbox",s:"build"}],
+  skills:["Member meeting capture","Credit union CRM formatting","Member action tracking","Financial planning workflow","Team-level brief generation","Member retention analytics"]},
+
+  {id:30,tier:2,name:"Community Bank Trust Department",cat:"Trust & Estate",aum:"$100M–$1B",dm:"Head of Trust / SVP Trust",cycle:"6–10 weeks",arr:"$12K–36K/yr",comp:"HIGH",reg:"OCC, state banking, fiduciary standards",worm:true,soc2:true,rbac:true,
+  pain:"Trust departments manage fiduciary accounts requiring precise documentation, court-ready records, and annual account review reports. All documentation is manual and legally consequential.",
+  agents:[{i:"⚖️",n:"Trust Review Agent",d:"Captures trust account reviews with fiduciary-standard documentation for OCC examination"},
+  {i:"📑",n:"Annual Account Review Agent",d:"Generates annual trust account review reports formatted for beneficiary filings and court"},
+  {i:"📋",n:"Fiduciary Action Agent",d:"Creates trustee action items with full approval chains documented for OCC audit trail"},
+  {i:"🔐",n:"Archiving Agent",d:"Routes all trust communications to compliant long-term storage with retention policies"}],
+  ints:[{n:"Trust accounting (SunGard/FiServ)",s:"gated"},{n:"Outlook/Teams",s:"live"},{n:"DocuSign",s:"live"},{n:"Global Relay",s:"gated"}],
+  skills:["Trust review documentation","Annual account report generation","Fiduciary action tracking","Court-ready record formatting","Beneficiary communication drafting","Trustee approval workflow"]},
+
+  {id:31,tier:2,name:"RIA Aggregator / Roll-Up",cat:"RIA Platform",aum:"$1B–$20B",dm:"CEO / Chief Growth Officer",cycle:"6–12 weeks",arr:"$24K–120K/yr",comp:"MED-HIGH",reg:"SEC RIA (multi-principal)",worm:false,soc2:true,rbac:true,
+  pain:"Aggregators manage dozens of acquired RIA practices with inconsistent workflows. Bringing consistency to post-meeting follow-through across all acquired practices is the top operational challenge.",
+  agents:[{i:"🏗️",n:"Platform Standardization Agent",d:"Rolls out consistent meeting capture and follow-through across all acquired practices simultaneously"},
+  {i:"📊",n:"Network Analytics Agent",d:"Aggregator-level analytics: practice comparison, open loop rates, client experience scores by practice"},
+  {i:"📋",n:"Acquisition Integration Agent",d:"Onboards newly acquired practices onto standard SarvaX workflow within 30 days of close"}],
+  ints:[{n:"Salesforce FSC (platform)",s:"build"},{n:"Wealthbox/Redtail (practice)",s:"build"},{n:"Zoom/Teams",s:"live"},{n:"Schwab/Fidelity/Pershing",s:"gated"}],
+  skills:["Multi-practice workflow standardization","Acquisition onboarding playbook","Platform-level analytics","Practice performance comparison","Aggregator compliance monitoring"]},
+
+  {id:32,tier:2,name:"Insurance Advisory Firm (FIA/Annuity)",cat:"Insurance Distribution",aum:"N/A (premium volume)",dm:"Agency Owner / Managing Director",cycle:"3–6 weeks",arr:"$3,600–12K/yr",comp:"MED",reg:"State insurance DOI, SEC if RIA-affiliated",worm:false,soc2:false,rbac:true,
+  pain:"FIA/annuity sales require detailed suitability documentation and extensive follow-up. Applications are complex and every client conversation must be captured for carrier compliance.",
+  agents:[{i:"🛡️",n:"Suitability Capture Agent",d:"Documents annuity suitability analysis from client meetings for carrier and state DOI requirements"},
+  {i:"📋",n:"Application Action Agent",d:"Generates application checklist and follow-up tasks from sales meeting transcript"},
+  {i:"📤",n:"Client Brief Agent",d:"Post-meeting client summary: products discussed, next steps, documents needed for application"}],
+  ints:[{n:"AMS360/Applied Epic",s:"build"},{n:"Zoom/Meet",s:"live"},{n:"Gmail/Outlook",s:"live"},{n:"DocuSign",s:"live"}],
+  skills:["Suitability documentation","Annuity needs analysis notes","Application checklist generation","Carrier compliance documentation","Follow-up email drafting"]},
+
+  {id:33,tier:2,name:"Alternative Investment Advisor",cat:"Alternatives RIA",aum:"$100M–$1B",dm:"CIO / Founding Partner",cycle:"4–8 weeks",arr:"$6K–24K/yr",comp:"MED-HIGH",reg:"SEC RIA, Accredited Investor verification",worm:false,soc2:true,rbac:true,
+  pain:"Alternatives pitches are complex: LP structures, waterfall calculations, lock-up periods, capital call schedules. Every investor meeting generates complex documentation needs.",
+  agents:[{i:"📊",n:"Investor Meeting Agent",d:"Captures LP investor meetings with deal-specific context, structure summaries, and attribution"},
+  {i:"📋",n:"Investment Documentation Agent",d:"Generates subscription document checklist, capital call reminders, and LP update draft sections"},
+  {i:"💼",n:"Investor Brief Agent",d:"Pre-meeting brief with LP relationship history, capital account balance, and portfolio status"}],
+  ints:[{n:"Salesforce CRM",s:"live"},{n:"Zoom/Teams",s:"live"},{n:"Outlook",s:"live"},{n:"Addepar/iLEVEL",s:"build"},{n:"DocuSign",s:"live"}],
+  skills:["LP meeting capture","Capital call tracking","Subscription doc checklist","Investor update drafting","Alternative investment note formatting","Accredited investor verification workflow"]},
+
+  {id:34,tier:2,name:"Real Estate–Focused Wealth Advisor",cat:"Real Estate Advisory",aum:"$50M–$500M",dm:"Founding Advisor",cycle:"2–4 weeks",arr:"$2,400–9,600/yr",comp:"LOW-MED",reg:"SEC/State RIA",worm:false,soc2:false,rbac:false,
+  pain:"RE-focused clients discuss 1031 exchanges, DSTs, UPREIT structures, and development projects in every meeting. Documentation requires precise capture of complex RE transaction details.",
+  agents:[{i:"🏠",n:"RE Meeting Agent",d:"Captures real estate-specific discussions: 1031, DST, UPREIT, QOZ, property tax planning"},
+  {i:"📋",n:"RE Transaction Agent",d:"Generates transaction tracking: timelines, deadlines, counterparties, and closing requirements"},
+  {i:"📤",n:"Client Property Brief",d:"Post-meeting summary of RE strategy, pending transactions, next steps and critical deadlines"}],
+  ints:[{n:"Wealthbox/Salesforce",s:"build"},{n:"Zoom/Meet",s:"live"},{n:"Gmail",s:"live"},{n:"DocuSign",s:"live"}],
+  skills:["1031 exchange tracking","DST investment notes","UPREIT transaction documentation","Property tax planning notes","RE transaction timeline generation","QOZ investment documentation"]},
+
+  {id:35,tier:2,name:"Succession Planning Advisory",cat:"Succession Specialist",aum:"Varies (project-based)",dm:"Founding Partner",cycle:"3–6 weeks",arr:"$3,600–12K/yr",comp:"MED",reg:"SEC/State RIA, M&A advisory",worm:false,soc2:false,rbac:false,
+  pain:"Succession planning engagements run 12–36 months with complex multi-party stakeholder meetings. Maintaining precise documentation of valuation discussions and transition timelines is critical.",
+  agents:[{i:"🔄",n:"Succession Meeting Agent",d:"Captures multi-stakeholder succession discussions with precise attribution for each party"},
+  {i:"📋",n:"Succession Milestone Agent",d:"Tracks succession plan milestones, pending agreements, and open items with deadline alerts"},
+  {i:"📤",n:"Stakeholder Brief Agent",d:"Generates post-meeting summaries tailored for each stakeholder group separately"}],
+  ints:[{n:"Salesforce CRM",s:"live"},{n:"Zoom/Teams",s:"live"},{n:"Outlook",s:"live"},{n:"DocuSign",s:"live"},{n:"SharePoint",s:"live"}],
+  skills:["Succession milestone tracking","Multi-stakeholder meeting capture","Valuation discussion documentation","Transition timeline generation","Stakeholder agreement tracking"]},
+
+  // ════ TIER 3 — ENTERPRISE (15) ════
+  {id:36,tier:3,name:"Private Equity Firm (Lower/Mid Market)",cat:"Private Equity",aum:"$100M–$2B AUM",dm:"Managing Partner / COO",cycle:"8–16 weeks",arr:"$36K–120K/yr",comp:"MED-HIGH",reg:"SEC RIA (>$150M AUM), Form ADV",worm:false,soc2:true,rbac:true,
+  pain:"Deal teams run dozens of management meetings, LP calls, and portfolio company board sessions. Deal memo generation, IC documentation, and LP communications are all manual.",
+  agents:[{i:"💼",n:"Deal Team Meeting Agent",d:"Captures management meetings, IC sessions, board calls, and diligence calls with deal attribution"},
+  {i:"📄",n:"Deal Memo Agent",d:"Generates deal memo draft sections from diligence meeting transcripts — saves 4–6 hours per deal"},
+  {i:"📊",n:"Portfolio Monitoring Agent",d:"Tracks portfolio company KPIs and strategic initiatives from board meeting discussions"},
+  {i:"📤",n:"LP Communication Agent",d:"Drafts LP update emails and quarterly report sections from IC and portfolio context"}],
+  ints:[{n:"Salesforce/DealCloud",s:"build"},{n:"Zoom/Teams",s:"live"},{n:"Outlook",s:"live"},{n:"Addepar/Allvue",s:"build"},{n:"DocuSign",s:"live"}],
+  skills:["Deal memo generation","Management meeting capture","Portfolio company tracking","LP update drafting","Diligence note formatting","IC meeting documentation"]},
+
+  {id:37,tier:3,name:"Venture Capital Firm",cat:"Venture Capital",aum:"$50M–$500M",dm:"Managing Partner / Chief of Staff",cycle:"6–12 weeks",arr:"$24K–60K/yr",comp:"MED",reg:"SEC RIA (Venture Capital Exemption)",worm:false,soc2:true,rbac:true,
+  pain:"Partners take 5–10 founder calls per day. Meeting notes, follow-ups, and investment memos are entirely manual. Portfolio company board meetings generate extensive documentation needs.",
+  agents:[{i:"🚀",n:"Founder Call Agent",d:"Captures startup founder calls and extracts investment thesis signals for deal tracking"},
+  {i:"📄",n:"Investment Memo Agent",d:"Drafts investment memo sections from diligence and founder meeting transcripts automatically"},
+  {i:"📊",n:"Portfolio Board Agent",d:"Captures portfolio company board meetings and tracks KPIs and strategic risk signals"},
+  {i:"🌅",n:"Deal Pipeline Brief",d:"Daily deal pipeline brief: hot prospects, follow-ups due, board meeting prep items"}],
+  ints:[{n:"Affinity CRM/Salesforce",s:"build"},{n:"Zoom/Meet",s:"live"},{n:"Gmail",s:"live"},{n:"Notion/Confluence",s:"live"},{n:"DocuSign",s:"live"}],
+  skills:["Founder call capture","Investment thesis extraction","Board meeting documentation","Portfolio KPI tracking","LP update generation","Deal memo drafting"]},
+
+  {id:38,tier:3,name:"Hedge Fund (Sub-$1B AUM)",cat:"Hedge Fund",aum:"$100M–$1B",dm:"CIO / Chief Operating Officer",cycle:"8–16 weeks",arr:"$36K–120K/yr",comp:"HIGH",reg:"SEC RIA, Form PF, FINRA",worm:true,soc2:true,rbac:true,
+  pain:"IC meetings, investor calls, and counterparty conversations all require precise documentation. Investor update drafting is manual and time-intensive. WORM archiving obligations are unresolved.",
+  agents:[{i:"📊",n:"IC Meeting Agent",d:"Investment committee meeting capture with thesis, decision rationale, and attribution"},
+  {i:"📤",n:"Investor Update Agent",d:"Drafts investor update letters and emails from IC and portfolio performance context"},
+  {i:"🔍",n:"Counterparty Meeting Agent",d:"Captures prime broker, prime, and counterparty conversations with precise documentation"},
+  {i:"🔐",n:"Compliance Archive Agent",d:"Routes all communications to WORM-compliant archiving: Global Relay or Smarsh"}],
+  ints:[{n:"Salesforce CRM",s:"live"},{n:"Zoom/Teams",s:"live"},{n:"Outlook",s:"live"},{n:"Global Relay/Smarsh",s:"gated"},{n:"Advent/Geneva OMS",s:"gated"}],
+  skills:["IC meeting documentation","Investor update drafting","Counterparty call capture","Form PF support documentation","Compliance archiving","Performance commentary generation"]},
+
+  {id:39,tier:3,name:"Private Credit / Direct Lending",cat:"Private Credit",aum:"$200M–$5B",dm:"Managing Director / COO",cycle:"8–16 weeks",arr:"$36K–120K/yr",comp:"MED-HIGH",reg:"SEC RIA, credit fund regulations",worm:false,soc2:true,rbac:true,
+  pain:"Credit diligence meetings, borrower management calls, and credit committee sessions all require precise documentation. Credit memos and covenant monitoring notes are entirely manual.",
+  agents:[{i:"💳",n:"Credit Meeting Agent",d:"Captures borrower calls and credit committee discussions with deal and covenant attribution"},
+  {i:"📄",n:"Credit Memo Agent",d:"Generates credit memo draft sections from due diligence and management meeting transcripts"},
+  {i:"📊",n:"Covenant Monitor Agent",d:"Tracks covenant compliance and financial metric discussions from borrower management calls"},
+  {i:"📤",n:"LP Credit Update Agent",d:"Drafts LP updates: portfolio credit quality, new originations, workouts, and exits"}],
+  ints:[{n:"Salesforce/DealCloud",s:"build"},{n:"Zoom/Teams",s:"live"},{n:"Outlook",s:"live"},{n:"Allvue/iLEVEL",s:"build"}],
+  skills:["Credit memo generation","Borrower call capture","Covenant tracking","Credit committee documentation","LP update drafting","Portfolio monitoring notes"]},
+
+  {id:40,tier:3,name:"Boutique Asset Manager ($1–$10B)",cat:"Asset Management",aum:"$1B–$10B",dm:"CIO / Head of Client Relations",cycle:"8–20 weeks",arr:"$60K–180K/yr",comp:"HIGH",reg:"SEC RIA, Form ADV, GIPS compliance",worm:true,soc2:true,rbac:true,
+  pain:"Institutional client meetings require precise documentation of mandate discussions, performance attribution, and risk framework conversations. RFP responses and client reporting are manual.",
+  agents:[{i:"🏛️",n:"Institutional Client Agent",d:"Captures institutional client meetings with mandate scope, performance context, and attribution"},
+  {i:"📋",n:"RFP Response Agent",d:"Drafts RFP response sections from client meeting context and due diligence conversations"},
+  {i:"📤",n:"Client Reporting Agent",d:"Generates quarterly client report sections from meeting context and portfolio performance data"},
+  {i:"🔐",n:"GIPS Documentation Agent",d:"Maintains GIPS-compliant performance presentation documentation and composite records"}],
+  ints:[{n:"Salesforce CRM",s:"live"},{n:"Teams/Zoom",s:"live"},{n:"Outlook",s:"live"},{n:"Global Relay",s:"gated"},{n:"Bloomberg/Factset",s:"gated"}],
+  skills:["Institutional meeting capture","RFP response drafting","Performance commentary generation","Mandate documentation","GIPS compliance documentation","Quarterly report section generation"]},
+
+  {id:41,tier:3,name:"TAMP Platform (Turnkey Asset Mgmt)",cat:"Platform Provider",aum:"Platform AUM $5B+",dm:"CEO / Head of Platform",cycle:"12–24 weeks",arr:"$60K–240K/yr",comp:"HIGH",reg:"SEC RIA, platform liability",worm:false,soc2:true,rbac:true,
+  pain:"TAMPs support hundreds of advisor firms on their platform. Providing SarvaX as a platform-level value-add creates a new revenue stream and deepens platform stickiness significantly.",
+  agents:[{i:"🏗️",n:"Platform Meeting Agent",d:"White-labeled meeting intelligence deployed across all platform advisors with firm branding"},
+  {i:"📊",n:"Platform Analytics Agent",d:"Aggregate analytics across all platform advisors: engagement, follow-through, and client value scores"},
+  {i:"📋",n:"Platform Action Agent",d:"Standardized follow-through workflows available to all platform advisors from day one"}],
+  ints:[{n:"TAMP platform CRM",s:"build"},{n:"Zoom/Teams",s:"live"},{n:"Orion/Envestnet",s:"build"},{n:"Schwab/Fidelity custodians",s:"gated"}],
+  skills:["White-label platform deployment","Advisor onboarding automation","Platform-level analytics","Workflow standardization","Multi-advisor coordination","Platform revenue generation"]},
+
+  {id:42,tier:3,name:"Mid-Size Broker-Dealer (500–2000 reps)",cat:"Broker-Dealer",aum:"Rep book $50M–$5B",dm:"CTO / COO / Head of Compliance",cycle:"12–24 weeks",arr:"$120K–360K/yr",comp:"HIGH",reg:"FINRA, SEC, WORM, Reg BI",worm:true,soc2:true,rbac:true,
+  pain:"Mid-size BDs face FINRA scrutiny with limited compliance budgets. Manual supervision of 500–2000 rep communications is impossible. FINRA exam readiness requires structured, searchable records.",
+  agents:[{i:"🔍",n:"Compliance Surveillance Agent",d:"Automated scanning of all rep communications for Reg BI, suitability, and churning violations"},
+  {i:"📋",n:"Reg BI Documentation Agent",d:"Generates Reg BI-compliant best interest documentation for each documented client interaction"},
+  {i:"📊",n:"BD Analytics Agent",d:"Rep performance, open loop rates, and compliance score dashboards for branch managers"},
+  {i:"🔐",n:"WORM Archive Agent",d:"Routes all communications to FINRA-compliant WORM storage: Global Relay or Smarsh"}],
+  ints:[{n:"Salesforce FSC/proprietary CRM",s:"build"},{n:"Global Relay/Smarsh",s:"gated"},{n:"Teams/Zoom",s:"live"},{n:"FINRA TRACE",s:"gated"},{n:"Pershing/Fidelity/RBC",s:"gated"}],
+  skills:["Reg BI documentation","FINRA compliance scanning","WORM routing workflow","Supervisory review automation","Rep performance analytics","Suitability documentation"]},
+
+  {id:43,tier:3,name:"Independent Trust Company",cat:"Trust & Fiduciary",aum:"$500M–$5B",dm:"President / CEO",cycle:"12–20 weeks",arr:"$60K–180K/yr",comp:"HIGH",reg:"OCC / state trust charter, fiduciary standard",worm:true,soc2:true,rbac:true,
+  pain:"Trust companies manage fiduciary accounts requiring court-ready documentation, annual reviews with beneficiaries, and trustee decision trails. All high-stakes documentation is manual.",
+  agents:[{i:"⚖️",n:"Trust Review Agent",d:"Captures trustee and beneficiary meetings with full fiduciary documentation for OCC examination"},
+  {i:"📑",n:"Annual Review Agent",d:"Generates annual trust review reports formatted for court, beneficiary, or regulatory filing"},
+  {i:"🔐",n:"Trustee Decision Trail Agent",d:"Creates timestamped trustee decision documentation protecting trustees against personal liability"}],
+  ints:[{n:"Trust accounting (FiServ/SunGard)",s:"gated"},{n:"Teams/Zoom",s:"live"},{n:"Outlook",s:"live"},{n:"DocuSign",s:"live"},{n:"Global Relay",s:"gated"}],
+  skills:["Fiduciary meeting documentation","Annual trust review generation","Trustee decision trail","Beneficiary communication drafting","Court-ready record formatting"]},
+
+  {id:44,tier:3,name:"Corporate Treasury / Cash Management",cat:"Corporate Finance",aum:"Treasury $100M–$10B",dm:"Treasurer / CFO",cycle:"8–16 weeks",arr:"$24K–72K/yr",comp:"MED-HIGH",reg:"SEC (if registered), GAAP, internal policy",worm:false,soc2:true,rbac:true,
+  pain:"Treasury teams manage bank relationships, liquidity strategy, FX hedging, and investment policy across multiple meetings and counterparties. Documentation is fragmented across systems.",
+  agents:[{i:"🏦",n:"Treasury Meeting Agent",d:"Captures bank relationship, liquidity committee, and investment policy meetings"},
+  {i:"📋",n:"Treasury Action Agent",d:"Generates treasury action items: hedges to execute, bank transfers, IPS updates, counterparty tasks"},
+  {i:"📊",n:"Counterparty Brief Agent",d:"Pre-meeting brief with bank relationship history, open items, and credit line utilization"}],
+  ints:[{n:"Salesforce/internal CRM",s:"live"},{n:"Teams/Zoom",s:"live"},{n:"Outlook",s:"live"},{n:"Bloomberg TRM",s:"gated"}],
+  skills:["Treasury meeting documentation","Bank relationship tracking","Liquidity strategy notes","FX hedging documentation","IPS update workflow","Counterparty action tracking"]},
+
+  {id:45,tier:3,name:"Endowment or Foundation ($50M–$500M)",cat:"Nonprofit Investment",aum:"$50M–$500M",dm:"CIO / Executive Director",cycle:"8–16 weeks",arr:"$24K–60K/yr",comp:"MED",reg:"IRS 990, UPMIFA, fiduciary",worm:false,soc2:true,rbac:true,
+  pain:"IC meetings require board-level documentation. Spending policy discussions, asset allocation changes, and manager reviews all need precise records for IRS, governance, and stakeholder purposes.",
+  agents:[{i:"🎓",n:"Investment Committee Agent",d:"Captures investment committee meetings with board-ready, UPMIFA-compliant documentation"},
+  {i:"📑",n:"Board Report Agent",d:"Generates investment committee report sections for board meeting packets automatically"},
+  {i:"📊",n:"Spending Policy Agent",d:"Tracks spending policy discussions, distribution calculations, and endowment sustainability metrics"}],
+  ints:[{n:"Salesforce CRM",s:"live"},{n:"Teams/Zoom",s:"live"},{n:"Outlook",s:"live"},{n:"Addepar/SEI",s:"build"},{n:"DocuSign",s:"live"}],
+  skills:["Investment committee documentation","Board report generation","Spending policy tracking","Manager review notes","UPMIFA compliance documentation","Governance meeting capture"]},
+
+  {id:46,tier:3,name:"Municipal Bond Advisor",cat:"Fixed Income Advisory",aum:"$100M–$2B",dm:"Managing Director",cycle:"6–12 weeks",arr:"$18K–60K/yr",comp:"HIGH",reg:"MSRB, SEC, FINRA",worm:true,soc2:true,rbac:true,
+  pain:"Muni bond client meetings require MSRB-compliant documentation, specific disclosure practices, and precise records of suitability determinations per MSRB Rule G-19.",
+  agents:[{i:"🏛️",n:"Muni Client Agent",d:"Captures muni bond client meetings with MSRB Rule G-19 compliant documentation"},
+  {i:"📋",n:"Suitability Agent",d:"Documents suitability determinations for each muni bond recommendation with full rationale"},
+  {i:"🔐",n:"MSRB Archive Agent",d:"Routes all communications to MSRB-compliant archiving systems with retention schedules"}],
+  ints:[{n:"Salesforce CRM",s:"live"},{n:"Teams/Zoom",s:"live"},{n:"Outlook",s:"live"},{n:"Global Relay/Smarsh",s:"gated"}],
+  skills:["MSRB compliance documentation","Muni suitability notes","Client disclosure tracking","Bond recommendation rationale","Regulatory archive workflow"]},
+
+  {id:47,tier:3,name:"Commodities Trading Advisor (CTA)",cat:"Alternative Investments",aum:"$25M–$500M",dm:"Principal CTA",cycle:"6–12 weeks",arr:"$12K–36K/yr",comp:"HIGH",reg:"CFTC, NFA registration required",worm:true,soc2:true,rbac:true,
+  pain:"CTAs face strict CFTC/NFA documentation requirements. Investor calls, strategy discussions, and risk disclosures all require precise records for NFA examinations.",
+  agents:[{i:"📈",n:"CTA Investor Agent",d:"Captures investor and strategy meetings with CFTC Regulation 4.33 aware documentation"},
+  {i:"📋",n:"Risk Disclosure Agent",d:"Generates risk disclosure documentation from strategy discussion transcripts"},
+  {i:"🔐",n:"NFA Archive Agent",d:"Routes all communications to NFA-compliant storage with 5-year retention"}],
+  ints:[{n:"Salesforce CRM",s:"live"},{n:"Teams/Zoom",s:"live"},{n:"Outlook",s:"live"},{n:"Global Relay",s:"gated"}],
+  skills:["CFTC/NFA compliant documentation","Risk disclosure generation","Strategy meeting capture","Investor disclosure tracking","Regulatory archive workflow"]},
+
+  {id:48,tier:3,name:"Real Estate Investment Advisor (REOC)",cat:"Real Estate Investment",aum:"$100M–$2B",dm:"Managing Director / CIO",cycle:"8–16 weeks",arr:"$24K–72K/yr",comp:"MED-HIGH",reg:"SEC RIA, state real estate",worm:false,soc2:true,rbac:true,
+  pain:"REOC investor calls, asset management meetings, and acquisition diligence sessions generate complex documentation needs across multiple properties and investor relationships simultaneously.",
+  agents:[{i:"🏢",n:"Asset Management Agent",d:"Captures property and portfolio meetings with asset-level attribution and performance context"},
+  {i:"📄",n:"Acquisition Memo Agent",d:"Drafts acquisition memo sections from investment committee and diligence discussions"},
+  {i:"📤",n:"Investor Update Agent",d:"Generates fund update sections for quarterly investor communications from meeting context"}],
+  ints:[{n:"Salesforce/Juniper Square",s:"build"},{n:"Zoom/Teams",s:"live"},{n:"Outlook",s:"live"},{n:"AppFolio/Yardi",s:"build"}],
+  skills:["Property meeting documentation","Acquisition memo generation","Investor update drafting","Asset management tracking","Deal pipeline notes","Portfolio monitoring"]},
+
+  {id:49,tier:3,name:"Pension Fund Consultant (Boutique)",cat:"Institutional Consulting",aum:"Client AUM $500M–$10B",dm:"Founding Principal",cycle:"12–20 weeks",arr:"$36K–120K/yr",comp:"HIGH",reg:"ERISA, DOL, fiduciary standard",worm:false,soc2:true,rbac:true,
+  pain:"Pension IC meetings require precise documentation for ERISA compliance. Trustee decisions, manager selection rationale, and policy changes must be board-ready and defensible under DOL scrutiny.",
+  agents:[{i:"📊",n:"Investment Committee Agent",d:"Captures pension IC meetings with ERISA-compliant documentation standards and attribution"},
+  {i:"📑",n:"Board Package Agent",d:"Generates IC meeting minutes and board report sections formatted for trustee review"},
+  {i:"📋",n:"Manager Review Agent",d:"Documents investment manager selection and termination rationale per ERISA prudent expert standards"}],
+  ints:[{n:"Salesforce CRM",s:"live"},{n:"Teams/Zoom",s:"live"},{n:"Outlook",s:"live"},{n:"Callan/InvestorForce",s:"gated"}],
+  skills:["ERISA meeting documentation","IC meeting minutes","Board package generation","Manager review notes","DOL compliance documentation","Trustee decision documentation"]},
+
+  {id:50,tier:3,name:"RIA Compliance Consulting Firm",cat:"Compliance Services",aum:"N/A (consulting revenue)",dm:"Founder / Managing Principal",cycle:"6–10 weeks",arr:"$12K–36K/yr",comp:"HIGH",reg:"SEC, FINRA — advises clients on these",worm:false,soc2:true,rbac:true,
+  pain:"Compliance consultants conduct mock exams, prepare for SEC audits, and review advisor communications — requiring precise documentation of findings, deficiencies, and remediation plans.",
+  agents:[{i:"🔍",n:"Mock Exam Agent",d:"Captures mock examination findings and structures deficiency reports for client firms"},
+  {i:"📋",n:"Remediation Tracker",d:"Tracks open compliance deficiencies and remediation status across all client engagements"},
+  {i:"📤",n:"Exam Prep Agent",d:"Generates SEC/FINRA exam preparation checklist from prior examination findings and current rules"}],
+  ints:[{n:"Salesforce CRM",s:"live"},{n:"Zoom/Teams",s:"live"},{n:"Outlook",s:"live"},{n:"RIA in a Box/COMPLY",s:"build"},{n:"DocuSign",s:"live"}],
+  skills:["Exam finding documentation","Deficiency report generation","Remediation tracking","SEC exam prep workflow","Compliance review notes","Client advisory documentation"]},
+
+  // ════ TIER 4 — AVOID NOW (10) ════
+  {id:51,tier:4,name:"Large Wirehouse (Merrill, Morgan Stanley)",cat:"Wirehouse",aum:"$1T+",dm:"C-Suite / Enterprise Procurement",cycle:"18–36 months",arr:"$5M+",comp:"EXTREME",reg:"FINRA, SEC, OCC, WORM, MiFID II",worm:true,soc2:true,rbac:true,
+  pain:"Built proprietary AI with dedicated 100+ engineer teams. Enterprise procurement takes 2–3 years minimum. Blocked by legal, info-sec, and board-level approval requirements.",
+  agents:[{i:"🚫",n:"Not applicable at this stage",d:"Proprietary AI stack in production. Not a vendor target — potential acquirer long-term."}],
+  ints:[{n:"Proprietary (all gated)",s:"gated"}],
+  skills:["N/A — wrong stage, wrong budget, wrong sales cycle"]},
+
+  {id:52,tier:4,name:"National Broker-Dealer (LPL Scale)",cat:"Broker-Dealer",aum:"32,000+ advisors",dm:"SVP Advisor Technology",cycle:"12–24 months (VAP process)",arr:"$500K–2M",comp:"EXTREME",reg:"FINRA, SEC, WORM, Reg BI",worm:true,soc2:true,rbac:true,
+  pain:"Requires organic LPL advisor adoption before the VAP application is even considered. Jump took 10 months and organic LPL advisor growth before approval. This is the T2 milestone target — not now.",
+  agents:[{i:"⏳",n:"Target after 50 paying LPL-affiliated RIAs",d:"Build organic LPL advisor base in T1, then apply for Vendor Affinity Program with case studies"}],
+  ints:[{n:"LPL ClientWorks (gated — post-T1)",s:"gated"}],
+  skills:["Get 50 paying LPL-affiliated RIA advisors first. Then apply for VAP."]},
+
+  {id:53,tier:4,name:"Investment Bank (M&A Advisory)",cat:"Investment Banking",aum:"N/A",dm:"COO / Head of Technology",cycle:"12–24 months",arr:"$1M+",comp:"EXTREME",reg:"SEC, FINRA, information barriers",worm:true,soc2:true,rbac:true,
+  pain:"Chinese walls and information barriers make AI meeting transcription a regulatory nightmare. Deal meetings cannot be captured with standard tools. Legal risk is acute and procurement is long.",
+  agents:[{i:"🚫",n:"Not applicable",d:"Information barrier requirements block standard AI meeting tools in IBD environments"}],
+  ints:[{n:"Restricted — gated by legal",s:"gated"}],
+  skills:["N/A — information barrier regulations block standard meeting AI"]},
+
+  {id:54,tier:4,name:"Commercial Bank Wealth Division",cat:"Bank Wealth",aum:"$10B+",dm:"Enterprise Procurement Committee",cycle:"18–36 months",arr:"$2M+",comp:"EXTREME",reg:"OCC, Fed, FDIC, state banking",worm:true,soc2:true,rbac:true,
+  pain:"Bank procurement is a 2–3 year process. Security reviews, legal reviews, and board approval all required. SOC 2 Type II, penetration testing, and contractual indemnity requirements are prerequisites.",
+  agents:[{i:"⏳",n:"Target post-Series A only",d:"Requires SOC 2 Type II certified, reference customers, and FedRAMP readiness to enter procurement"}],
+  ints:[{n:"All gated — bank security review",s:"gated"}],
+  skills:["N/A — procurement cycle too long for current stage"]},
+
+  {id:55,tier:4,name:"Sovereign Wealth Fund",cat:"Sovereign",aum:"$100B+",dm:"Government / Board",cycle:"24–48 months",arr:"$5M+",comp:"EXTREME",reg:"Sovereign jurisdiction + IOSCO",worm:true,soc2:true,rbac:true,
+  pain:"Government procurement with data sovereignty requirements. Multi-year approval process involving national regulators. Not a realistic target before Series B with enterprise reference customers.",
+  agents:[{i:"🚫",n:"Not applicable",d:"Sovereign procurement and data sovereignty requirements are prohibitive at this stage"}],
+  ints:[{n:"Sovereign-controlled infrastructure",s:"gated"}],
+  skills:["N/A — wrong stage, wrong market, wrong sales cycle"]},
+
+  {id:56,tier:4,name:"Public Pension System",cat:"Pension",aum:"$1B–$500B",dm:"CIO / Board of Trustees",cycle:"18–36 months",arr:"$1M+",comp:"EXTREME",reg:"ERISA (if private), state pension law",worm:true,soc2:true,rbac:true,
+  pain:"State pension procurement requires legislative approval in some jurisdictions. RFP process alone takes 18–36 months. Minimum of 3 qualified reference clients required before RFP qualification.",
+  agents:[{i:"⏳",n:"Target post-Series A",d:"RFP qualification requires reference clients, full compliance stack, and SOC 2 Type II"}],
+  ints:[{n:"State infrastructure (gated)",s:"gated"}],
+  skills:["N/A — procurement timeline and reference client requirements prohibitive"]},
+
+  {id:57,tier:4,name:"Federal / State Government Investment Office",cat:"Government",aum:"Varies",dm:"CIO / Government Procurement",cycle:"24–48 months",arr:"$500K+",comp:"EXTREME",reg:"FedRAMP, FISMA, state equivalents",worm:true,soc2:true,rbac:true,
+  pain:"FedRAMP authorization alone takes 12–18 months and $500K+ investment. FISMA compliance is separate. Not viable until post-Series B with dedicated government sales team.",
+  agents:[{i:"🚫",n:"Not applicable",d:"FedRAMP authorization required — not viable until post-Series B"}],
+  ints:[{n:"GovCloud required",s:"gated"}],
+  skills:["N/A — FedRAMP and FISMA requirements prohibitive at this stage"]},
+
+  {id:58,tier:4,name:"Insurance Conglomerate (Hartford, MetLife Scale)",cat:"Insurance Enterprise",aum:"$100B+ AUM",dm:"Enterprise Procurement",cycle:"24–36 months",arr:"$2M+",comp:"EXTREME",reg:"State DOI, OCC (banks), SEC",worm:true,soc2:true,rbac:true,
+  pain:"Fortune 500 insurance procurement. Internal AI build teams with hundreds of engineers. 2–3 year sales cycle. Not realistic at current stage — potential distribution partner long-term.",
+  agents:[{i:"⏳",n:"Future target — potential partner",d:"Better positioned as distribution partnership than direct sales at this scale"}],
+  ints:[{n:"Proprietary internal systems",s:"gated"}],
+  skills:["N/A — internal AI teams + enterprise procurement cycle"]},
+
+  {id:59,tier:4,name:"Universal Bank (JPMorgan, Citi Wealth)",cat:"Universal Bank",aum:"Multi-trillion",dm:"Board-level technology decision",cycle:"36–60 months",arr:"$10M+",comp:"EXTREME",reg:"OCC, Fed, FDIC, FINRA, SEC, MiFID II",worm:true,soc2:true,rbac:true,
+  pain:"Building proprietary AI with thousands of dedicated engineers. More likely to be an acquirer than a vendor customer. Do not attempt to sell in — build relationships instead.",
+  agents:[{i:"🚫",n:"Not a vendor target",d:"JPMorgan, Citi, and peers are building proprietary AI. They acquire, not buy SaaS."}],
+  ints:[{n:"Proprietary global infrastructure",s:"gated"}],
+  skills:["N/A — potential acquirer, not a customer"]},
+
+  {id:60,tier:4,name:"Private Bank (UBS, Credit Suisse Scale)",cat:"Private Bank",aum:"$100B+",dm:"Global CTO / Head of Digital",cycle:"24–48 months",arr:"$5M+",comp:"EXTREME",reg:"FINMA, SEC, FCA, MAS — multi-jurisdiction",worm:true,soc2:true,rbac:true,
+  pain:"Multi-jurisdiction compliance requirements (US + Switzerland + Singapore + UK). Procurement requires approval from multiple national regulators. Not viable before post-Series B with a dedicated enterprise team.",
+  agents:[{i:"⏳",n:"Future target — post-Series B",d:"Multi-jurisdiction compliance stack requires mature product, reference clients, and dedicated enterprise team"}],
+  ints:[{n:"Multi-jurisdiction gated systems",s:"gated"}],
+  skills:["N/A — multi-jurisdiction complexity requires dedicated enterprise compliance team"]},
+];
+
+const TIER_COLORS = {1:'var(--t1)',2:'var(--t2)',3:'var(--t3)',4:'var(--t4)'};
+const TIER_LABELS = {1:'T1 · Beachhead',2:'T2 · Expansion',3:'T3 · Enterprise',4:'T4 · Avoid Now'};
+const TIER_FULL = {
+  1:'T1 — BEACHHEAD · Go Now · Lightest compliance · Fastest decision cycle',
+  2:'T2 — EXPANSION · After 50 paying advisors · SOC 2 in progress required',
+  3:'T3 — ENTERPRISE · After Schwab listing · SOC 2 certified + reference clients',
+  4:'T4 — AVOID NOW · Come back in 18–36 months · Wrong stage'
+};
+
+let activeSector = null;
+let activeFilter = 0;
+let searchTerm = '';
+
+function renderList(){
+  const list = document.getElementById('sectorList');
+  list.innerHTML = '';
+  const tiers = [1,2,3,4];
+  tiers.forEach(t=>{
+    const items = SECTORS.filter(s=>{
+      const matchTier = activeFilter===0 || s.tier===activeFilter;
+      const matchSearch = !searchTerm || s.name.toLowerCase().includes(searchTerm) || s.cat.toLowerCase().includes(searchTerm);
+      return matchTier && matchSearch && s.tier===t;
+    });
+    if(items.length===0) return;
+    const group = document.createElement('div');
+    group.className = 'tier-group';
+    group.innerHTML = `<div class="tier-group-header">
+      <span class="tier-group-dot" style="background:${TIER_COLORS[t]};box-shadow:0 0 6px ${TIER_COLORS[t]}"></span>
+      <h3 style="color:${TIER_COLORS[t]}">${TIER_LABELS[t]}</h3>
+      <span class="tier-group-count">${items.length}</span>
+    </div>`;
+    items.forEach(s=>{
+      const item = document.createElement('div');
+      item.className = `sector-item${activeSector===s.id?' active':''}`;
+      item.dataset.id = s.id;
+      item.innerHTML = `<span class="si-num">#${String(s.id).padStart(2,'0')}</span>
+        <span class="si-dot" style="background:${TIER_COLORS[s.tier]};box-shadow:0 0 5px ${TIER_COLORS[s.tier]}"></span>
+        <span class="si-name">${s.name}</span>
+        <span class="si-aum">${s.aum.split('–')[0].replace('$','$').trim()}</span>`;
+      item.addEventListener('click',()=>selectSector(s.id));
+      group.appendChild(item);
+    });
+    list.appendChild(group);
+  });
+  // results meta
+  const total = SECTORS.filter(s=>{
+    const matchTier = activeFilter===0 || s.tier===activeFilter;
+    const matchSearch = !searchTerm || s.name.toLowerCase().includes(searchTerm) || s.cat.toLowerCase().includes(searchTerm);
+    return matchTier && matchSearch;
+  }).length;
+  document.getElementById('resultsMeta').textContent = `Showing ${total} of 60 sectors`;
+}
+
+function selectSector(id){
+  activeSector = id;
+  renderList();
+  renderDetail(id);
+  // scroll into view on mobile
+  if(window.innerWidth <= 960){
+    document.getElementById('detailPanel').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+}
+
+function renderDetail(id){
+  const s = SECTORS.find(x=>x.id===id);
+  if(!s) return;
+  const panel = document.getElementById('detailPanel');
+  const tc = TIER_COLORS[s.tier];
+  const tl = TIER_LABELS[s.tier];
+  const isT4 = s.tier===4;
+
+  const intHtml = s.ints.map(i=>`<span class="int-chip ic-${i.s}">${i.n}</span>`).join('');
+  const skillHtml = s.skills.map(sk=>`<span class="skill-chip">${sk}</span>`).join('');
+  const agentHtml = s.agents.map(a=>`<div class="agent-row">
+    <span class="agent-icon">${a.i}</span>
+    <div class="agent-text"><div class="agent-name">${a.n}</div><div class="agent-desc">${a.d}</div></div>
+  </div>`).join('');
+
+  const compClass = {LOW:'comp-low','LOW-MED':'comp-med',MED:'comp-med','MED-HIGH':'comp-high',HIGH:'comp-high',EXTREME:'comp-ext'}[s.comp]||'comp-med';
+  const t4warn = isT4 ? `<div class="t4-overlay"><p><strong>⚠️ Do not pursue at this stage.</strong> ${s.pain}</p></div>` : '';
+
+  panel.innerHTML = `<div class="detail-card">
+    <div class="detail-top-bar" style="background:${tc}"></div>
+    <div class="detail-body">
+      <div class="detail-header">
+        <div class="detail-title-group">
+          <div class="detail-num">#${String(s.id).padStart(2,'0')} · ${s.cat}</div>
+          <div class="detail-name">${s.name}</div>
+          <div class="detail-category">${TIER_FULL[s.tier]}</div>
+        </div>
+        <span class="detail-tier-badge" style="background:${tc}18;color:${tc};border:1px solid ${tc}40">${tl}</span>
+      </div>
+      ${t4warn}
+      ${!isT4?`<div class="detail-pain"><p>${s.pain}</p></div>`:''}
+      <div class="meta-grid">
+        <div class="meta-block"><div class="meta-block-label">AUM Range</div><div class="meta-block-value">${s.aum}</div></div>
+        <div class="meta-block"><div class="meta-block-label">Decision Maker</div><div class="meta-block-value">${s.dm}</div></div>
+        <div class="meta-block"><div class="meta-block-label">Sales Cycle</div><div class="meta-block-value">${s.cycle}</div></div>
+        <div class="meta-block"><div class="meta-block-label">ARR Potential</div><div class="meta-block-value">${s.arr}</div></div>
+        <div class="meta-block"><div class="meta-block-label">Regulation</div><div class="meta-block-value" style="font-size:11px;line-height:1.4">${s.reg}</div></div>
+        <div class="meta-block"><div class="meta-block-label">Compliance</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">
+            <span class="comp-badge ${compClass}">${s.comp}</span>
+            <span class="comp-badge ${s.worm?'req-yes':'req-no'}">WORM ${s.worm?'✓':'–'}</span>
+            <span class="comp-badge ${s.soc2?'req-yes':'req-no'}">SOC2 ${s.soc2?'✓':'–'}</span>
+            <span class="comp-badge ${s.rbac?'req-yes':'req-no'}">RBAC ${s.rbac?'✓':'–'}</span>
+          </div>
+        </div>
+      </div>
+      ${!isT4?`
+      <div class="detail-divider"></div>
+      <div class="sec-title">Agents Required</div>
+      <div class="agents-list">${agentHtml}</div>
+      <div class="detail-divider"></div>
+      <div class="sec-title">Integrations Needed</div>
+      <div class="int-chips">${intHtml}</div>
+      <div class="int-legend">
+        <span class="leg-item"><span class="leg-dot" style="background:var(--live-c)"></span>Live</span>
+        <span class="leg-item"><span class="leg-dot" style="background:var(--build-c)"></span>Build</span>
+        <span class="leg-item"><span class="leg-dot" style="background:var(--gated-c)"></span>Gated</span>
+      </div>
+      <div class="detail-divider"></div>
+      <div class="sec-title">SarvaX Skills Required</div>
+      <div class="skill-chips">${skillHtml}</div>
+      `:''}
+    </div>
+  </div>`;
+}
+
+// Filter tabs
+document.querySelectorAll('.t-tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.t-tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = parseInt(btn.dataset.tier);
+    renderList();
+  });
+});
+
+// Search
+document.getElementById('searchInput').addEventListener('input',e=>{
+  searchTerm = e.target.value.toLowerCase().trim();
+  renderList();
+});
+
+// Initial render
+renderList();
+// Auto-select first sector
+if(SECTORS.length > 0) selectSector(1);
+</script>
+</body>
+</html>
